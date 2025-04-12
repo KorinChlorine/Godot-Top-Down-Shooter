@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4mnwqcbspjch"]
+
+[ext_resource type="AudioStream" uid="uid://dfcb3o17hf0ym" path="res://Overwatch 2 Kill Sound Effects (Headshot Kill + Normal Kill).wav" id="1_ktj6b"]
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D"]
+stream = ExtResource("1_ktj6b")
