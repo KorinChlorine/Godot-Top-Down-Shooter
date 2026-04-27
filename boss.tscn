@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://dx8i37sqngvhy"]
+[gd_scene format=3 uid="uid://daxc0osc6ga0d"]
 
-[ext_resource type="Texture2D" uid="uid://88l2cwju4c1p" path="res://Sprite-0002-export.png" id="1_2mipk"]
-[ext_resource type="Script" uid="uid://b73edyvthsian" path="res://enemy_1.gd" id="1_iysjp"]
-[ext_resource type="AudioStream" uid="uid://t0upj4fvg0ub" path="res://Hit-Marker-sound-effect.ogg" id="4_ovwak"]
+[ext_resource type="Script" uid="uid://b73edyvthsian" path="res://enemy_1.gd" id="1_skx2t"]
+[ext_resource type="Texture2D" uid="uid://88l2cwju4c1p" path="res://Sprite-0002-export.png" id="2_lnbgr"]
+[ext_resource type="AudioStream" uid="uid://t0upj4fvg0ub" path="res://Hit-Marker-sound-effect.ogg" id="3_o1i15"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wjy7s"]
 size = Vector2(16, 16)
@@ -13,14 +13,14 @@ size = Vector2(29.1639, 28.9533)
 [node name="enemy1" type="CharacterBody2D" unique_id=1065295579]
 collision_layer = 7
 collision_mask = 7
-script = ExtResource("1_iysjp")
+script = ExtResource("1_skx2t")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1879020444]
 shape = SubResource("RectangleShape2D_wjy7s")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1023695280]
 scale = Vector2(1.03583, 0.981242)
-texture = ExtResource("1_2mipk")
+texture = ExtResource("2_lnbgr")
 
 [node name="hitbox" type="Area2D" parent="." unique_id=604095417]
 scale = Vector2(1.0388, 1.05417)
@@ -33,7 +33,7 @@ scale = Vector2(0.990246, 0.933764)
 shape = SubResource("RectangleShape2D_n10vv")
 
 [node name="hitmarkSound" type="AudioStreamPlayer2D" parent="." unique_id=1165829487]
-stream = ExtResource("4_ovwak")
+stream = ExtResource("3_o1i15")
 volume_db = -12.429
 max_polyphony = 20
 

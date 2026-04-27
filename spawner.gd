@@ -1,65 +1,85 @@
 extends Node2D
 
-@export var enemy_scene: PackedScene
-@export var spawn_delay: float = 0.5
-@export var wave_duration: float = 30
-@export var enemy_1: CharacterBody2D
+var enemy_scenes: Dictionary = {
+	"basic": preload("res://enemy_1.tscn"),
+	"big": preload("res://enemy_2.tscn")
+	# You can add more later, e.g. shooter, fast, etc.
+}
+
 @export var waveLabel: Label
-var HP = 0
-var SPEED = 0
-var spawn_points = []
-var current_wave = 1
-var wave_timer: Timer
+@export var wave_announce_label: Label
+
+var current_wave: int = 1
+var wave_duration: float = 25.0
+var wave_active: bool = false
 var spawn_timer: Timer
 
-func update_label(new_text: String):
-	if waveLabel:
-		waveLabel.text = str(new_text)
-
 func _ready():
-	spawn_points = get_children()
-	if spawn_points.is_empty():
-		print("No spawn points!")
-	
-	wave_timer = Timer.new()
-	wave_timer.wait_time = wave_duration
-	wave_timer.one_shot = true
-	wave_timer.connect("timeout", _on_wave_timeout)
-	add_child(wave_timer)
-	
+	_start_wave()
+
+func _start_wave():
+	wave_active = true
+	waveLabel.text = "Wave: %d" % current_wave
+	if wave_announce_label:
+		wave_announce_label.text = "Wave %d Starting!" % current_wave
+		await get_tree().create_timer(2.0).timeout
+		wave_announce_label.text = ""
+
 	spawn_timer = Timer.new()
-	spawn_timer.wait_time = spawn_delay
-	spawn_timer.autostart = true
-	spawn_timer.connect("timeout", spawn_enemy)
+	spawn_timer.wait_time = max(0.2, 0.6 * pow(0.95, current_wave - 1))
+	spawn_timer.timeout.connect(_spawn_enemy)
 	add_child(spawn_timer)
+	spawn_timer.start()
 	
-	start_wave()
+	await get_tree().create_timer(wave_duration).timeout
+	_wave_complete()
 
-func start_wave():
-	print("Wave", current_wave, "started!")
-	wave_timer.start()
-	spawn_timer.start() 
+func _spawn_enemy():
+	if not wave_active: return
+	var player = get_tree().get_first_node_in_group("player")
+	if not is_instance_valid(player): return
 
-func spawn_enemy():
-	if spawn_points.is_empty():
-		return
-	
-	var enemy_instance = enemy_scene.instantiate()
-	var spawn_location = spawn_points[randi() % spawn_points.size()]
-	enemy_instance.position = spawn_location.position
-	enemy_instance.add_to_group("enemies")
-	get_tree().current_scene.add_child(enemy_instance)
+	# Scale spawn count per wave
+	var spawn_count = 2 + int(current_wave * 0.7)
 
-	print("Enemy Spawned!")
+	for i in range(spawn_count):
+		var enemy_type = _pick_enemy_type()
+		var enemy_scene = enemy_scenes.get(enemy_type, null)
+		if enemy_scene == null: continue
 
-func _on_wave_timeout():
-	print("Wave", current_wave, "ended!")
+		var enemy = enemy_scene.instantiate()
+		var pos = _find_valid_spawn_position(player)
+		if pos == Vector2.ZERO: continue
+
+		enemy.global_position = pos
+		enemy.HP = int(enemy.HP * pow(1.2, current_wave - 1))
+		enemy.SPEED += current_wave * 3
+
+		add_child(enemy)
+
+func _pick_enemy_type() -> String:
+	if current_wave < 3:
+		return "basic"
+	else:
+		return ["basic", "big"].pick_random()
+
+func _find_valid_spawn_position(player) -> Vector2:
+	for i in range(20):
+		var angle = randf() * TAU
+		var dist = randf_range(600, 900)
+		var pos = player.global_position + Vector2(cos(angle), sin(angle)) * dist
+		var space_state = get_world_2d().direct_space_state
+		var query = PhysicsPointQueryParameters2D.new()
+		query.position = pos
+		query.collision_mask = 1
+		if space_state.intersect_point(query).is_empty():
+			return pos
+	return Vector2.ZERO
+
+func _wave_complete():
+	wave_active = false
+	if is_instance_valid(spawn_timer): spawn_timer.queue_free()
+	if wave_announce_label: wave_announce_label.text = "Wave Clear!"
 	current_wave += 1
-	update_label("Wave: " + str(current_wave))
-	HP += 10
-	SPEED += 5
-	spawn_delay = max(spawn_delay - 0.2, 1)  
-	spawn_timer.wait_time = spawn_delay  
-	spawn_timer.start() 
-	
-	start_wave()
+	await get_tree().create_timer(3.0).timeout
+	_start_wave()
